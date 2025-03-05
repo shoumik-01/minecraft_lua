@@ -17,15 +17,15 @@ local currentState = GAME_STATE.MENU
 -- WINDOW_HEIGHT = 600
 
 -- Paddle settings
-PADDLE_WIDTH = 10
-PADDLE_HEIGHT = 80
-PADDLE_SPEED = 400
+PADDLE_WIDTH = 12
+PADDLE_HEIGHT = 90
+PADDLE_SPEED = 450
 
 -- Ball settings
-BALL_SIZE = 10
-BALL_SPEED_X = 320
-BALL_SPEED_Y = 210
-BALL_BASE_SPEED_X = 320 -- To reset after power-up expires
+BALL_SIZE = 12
+BALL_SPEED_X = 380
+BALL_SPEED_Y = 280
+BALL_BASE_SPEED_X = 380 -- To reset after power-up expires
 
 -- Win condition
 WIN_SCORE = 5
@@ -62,7 +62,14 @@ function love.load()
         msaa = 4
     })
     WINDOW_WIDTH, WINDOW_HEIGHT = love.graphics.getDimensions()
-
+    -- Audio support
+    sounds = {
+        paddleHit = love.audio.newSource("sounds/paddle_hit.wav", "static"),
+        wallHit = love.audio.newSource("sounds/wall_hit.wav", "static"),
+        score = love.audio.newSource("sounds/score.wav", "static"),
+        -- menuSelect = love.audio.newSource("sounds/menu_select.wav", "static"),
+        powerUp = love.audio.newSource("sounds/powerup.wav", "static")
+    }
     -- Set default font to something larger
     font = love.graphics.newFont(16)
     bigFont = love.graphics.newFont(32)
@@ -157,6 +164,8 @@ function updatePlaying(dt)
     -- Ball collision with top and bottom
     if ball.y <= 0 or ball.y + BALL_SIZE >= WINDOW_HEIGHT then
         ball.dy = -ball.dy
+        sounds.wallHit:stop()
+        sounds.wallHit:play()
         -- Push the ball away from the wall slightly
         if ball.y <= 0 then
             ball.y = 1  -- Small offset from top wall
@@ -173,6 +182,8 @@ function updatePlaying(dt)
         local ballCenter = ball.y + BALL_SIZE / 2
         local offsetFactor = (ballCenter - paddleCenter) / (PADDLE_HEIGHT / 2)
         ball.dy = ball.dy + offsetFactor * 100
+        sounds.paddleHit:stop()  -- Stop any currently playing instance
+        sounds.paddleHit:play()
     elseif checkCollision(ball, player2) then
         ball.dx = -math.abs(ball.dx) -- Reflect ball to the left
         -- Add a slight angle change based on where the ball hits the paddle
@@ -180,14 +191,18 @@ function updatePlaying(dt)
         local ballCenter = ball.y + BALL_SIZE / 2
         local offsetFactor = (ballCenter - paddleCenter) / (PADDLE_HEIGHT / 2)
         ball.dy = ball.dy + offsetFactor * 100
+        sounds.paddleHit:stop()  -- Stop any currently playing instance
+        sounds.paddleHit:play()
     end
 
     -- Ball out of bounds (scoring)
     if ball.x < 0 then
+        sounds.score:play()
         player2.score = player2.score + 1
         checkWinCondition()
         resetBall()
     elseif ball.x > WINDOW_WIDTH then
+        sounds.score:play()
         player1.score = player1.score + 1
         checkWinCondition()
         resetBall()
@@ -250,6 +265,7 @@ function checkCollisionWithPowerUp()
 end
 
 function activatePowerUp()
+    sounds.powerUp:play()
     powerUpVisible = false
     powerUpActive = true
     powerUpTimer = POWER_UP_DURATION
