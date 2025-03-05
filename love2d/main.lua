@@ -28,7 +28,7 @@ BALL_SPEED_Y = 210
 BALL_BASE_SPEED_X = 320 -- To reset after power-up expires
 
 -- Win condition
-WIN_SCORE = 10
+WIN_SCORE = 5
 
 -- Trail effect settings
 MAX_TRAIL_POINTS = 10
@@ -51,12 +51,16 @@ powerUpBox = {
 
 -- AI settings (for single player)
 AI_ENABLED = false
-AI_DIFFICULTY = 0.7 -- 0 to 1, higher is harder
+AI_DIFFICULTY = 0.9 -- 0 to 1, higher is harder
 
 -- Initialize paddles, ball, and game state
 function love.load()
     love.window.setTitle("Enhanced Pong")
-    love.window.setMode(0, 0, { fullscreen = true })
+    love.window.setMode(0, 0, { 
+        fullscreen = true,
+        vsync = 1,
+        msaa = 4
+    })
     WINDOW_WIDTH, WINDOW_HEIGHT = love.graphics.getDimensions()
 
     -- Set default font to something larger
@@ -153,6 +157,12 @@ function updatePlaying(dt)
     -- Ball collision with top and bottom
     if ball.y <= 0 or ball.y + BALL_SIZE >= WINDOW_HEIGHT then
         ball.dy = -ball.dy
+        -- Push the ball away from the wall slightly
+        if ball.y <= 0 then
+            ball.y = 1  -- Small offset from top wall
+        else
+            ball.y = WINDOW_HEIGHT - BALL_SIZE - 1  -- Small offset from bottom wall
+        end
     end
 
     -- Ball collision with paddles
