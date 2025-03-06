@@ -1,6 +1,6 @@
 -- Enhanced Pong Game in LÖVE 2D
 -- Author: Shoumik Hasan (with enhancements)
--- Version: 2.0
+-- Version: 2.1
 
 -- Game states
 local GAME_STATE = {
@@ -11,7 +11,7 @@ local GAME_STATE = {
 
 -- Current game state
 local currentState = GAME_STATE.MENU
-
+local lastScorer = nil  -- Will be "player1" or "player2"
 -- Game window settings
 -- WINDOW_WIDTH = 800
 -- WINDOW_HEIGHT = 600
@@ -199,11 +199,13 @@ function updatePlaying(dt)
     if ball.x < 0 then
         sounds.score:play()
         player2.score = player2.score + 1
+        lastScorer = "player2"  -- Player 2 scored
         checkWinCondition()
         resetBall()
     elseif ball.x > WINDOW_WIDTH then
         sounds.score:play()
         player1.score = player1.score + 1
+        lastScorer = "player1"  -- Player 1 scored
         checkWinCondition()
         resetBall()
     end
@@ -396,7 +398,21 @@ end
 function resetBall()
     ball.x = WINDOW_WIDTH / 2 - BALL_SIZE / 2
     ball.y = WINDOW_HEIGHT / 2 - BALL_SIZE / 2
-    ball.dx = BALL_SPEED_X * (math.random(2) == 1 and 1 or -1) -- Randomize direction
+    -- ball.dx = BALL_SPEED_X * (math.random(2) == 1 and 1 or -1) -- Randomize direction
+    -- ball.dy = BALL_SPEED_Y * (math.random(2) == 1 and 1 or -1)
+    -- Direction based on who scored last
+    if lastScorer == "player1" then
+        -- Ball goes toward player2 (right)
+        ball.dx = -BALL_SPEED_X
+    elseif lastScorer == "player2" then
+        -- Ball goes toward player1 (left)
+        ball.dx = BALL_SPEED_X
+    else
+        -- First serve of the game is random
+        ball.dx = BALL_SPEED_X * (math.random(2) == 1 and 1 or -1)
+    end
+    
+    -- Randomize vertical direction only
     ball.dy = BALL_SPEED_Y * (math.random(2) == 1 and 1 or -1)
     
     -- Reset trail
